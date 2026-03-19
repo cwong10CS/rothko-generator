@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Canvas from "./components/Canvas";
 
-const DEFAULT_LOCATION = "Reykjavik";
+const DEFAULT_LOCATION = "Florence";
 
 export default function HomePage() {
   const [location, setLocation] = useState(DEFAULT_LOCATION);
@@ -21,10 +21,18 @@ export default function HomePage() {
         `/api/weather?q=${encodeURIComponent(nextLocation)}`,
       );
       const data = await response.json();
+
+      if (!response.ok || data?.error) {
+        console.error("Weather API error:", data?.error || response.statusText);
+        setWeather(null);
+        return;
+      }
+
       setWeather(data);
       setLocation(nextLocation);
     } catch (error) {
       console.error("Error loading weather:", error);
+      setWeather(null);
     } finally {
       setLoading(false);
     }
