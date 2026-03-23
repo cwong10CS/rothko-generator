@@ -37,6 +37,8 @@ function getAirQualityLabel(aqi) {
 }
 
 export function normalizeWeatherApi(weatherData, airQualityData, location) {
+  const utcOffsetSeconds = weatherData?.utc_offset_seconds;
+  const timezone = weatherData?.timezone || null;
   const current = weatherData?.current || {};
   const airCurrent = airQualityData?.current || {};
   const condition = getCondition(current.weather_code);
@@ -52,6 +54,8 @@ export function normalizeWeatherApi(weatherData, airQualityData, location) {
       longitude: location.longitude
     },
     timestamp: current.time,
+    timezone,
+    utcOffsetSeconds: Number.isFinite(utcOffsetSeconds) ? utcOffsetSeconds : null,
     condition,
     temperatureC: current.temperature_2m ?? 15,
     windSpeedKph: current.wind_speed_10m ?? 0,
