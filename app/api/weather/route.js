@@ -22,17 +22,27 @@ export async function GET(request) {
       return NextResponse.json({ error: "Location not found" }, { status: 404 });
     }
 
-    const weatherResponse = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code,wind_speed_10m,is_day&hourly=relative_humidity_2m,cloud_cover`,
-      { cache: "no-store" }
-    );
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code,wind_speed_10m,is_day&hourly=relative_humidity_2m,cloud_cover`;
+    const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${location.latitude}&longitude=${location.longitude}&current=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide`;
+
+    const [weatherResponse, airQualityResponse] = await Promise.all([
+      fetch(weatherUrl, { cache: "no-store" }),
+      fetch(airQualityUrl, { cache: "no-store" })
+    ]);
 
     if (!weatherResponse.ok) {
       return NextResponse.json({ error: "Failed to fetch weather" }, { status: 502 });
     }
 
-    const weatherData = await weatherResponse.json();
-    const normalized = normalizeWeatherApi(weatherData, location);
+    if (!airQualityResponse.ok) {
+      return NextResponse.json({ error: "Failed to fetch air quality" }, { status: 502 });
+    }
+
+    const [weatherData, airQualityData] = await Promise.all([
+      weatherResponse.json(),
+      airQualityResponse.json()
+    ]);
+    const normalized = normalizeWeatherApi(weatherData, airQualityData, location);
 
     return NextResponse.json(normalized);
   } catch {

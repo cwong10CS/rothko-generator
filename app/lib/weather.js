@@ -26,11 +26,23 @@ function getNearestHourlyValue(hourly, targetTime, key) {
   return values[0];
 }
 
-export function normalizeWeatherApi(weatherData, location) {
+function getAirQualityLabel(aqi) {
+  if (!Number.isFinite(aqi)) return "unknown";
+  if (aqi <= 50) return "good";
+  if (aqi <= 100) return "moderate";
+  if (aqi <= 150) return "unhealthy for sensitive groups";
+  if (aqi <= 200) return "unhealthy";
+  if (aqi <= 300) return "very unhealthy";
+  return "hazardous";
+}
+
+export function normalizeWeatherApi(weatherData, airQualityData, location) {
   const current = weatherData?.current || {};
+  const airCurrent = airQualityData?.current || {};
   const condition = getCondition(current.weather_code);
   const humidity = getNearestHourlyValue(weatherData.hourly, current.time, "relative_humidity_2m");
   const cloudCover = getNearestHourlyValue(weatherData.hourly, current.time, "cloud_cover");
+  const aqi = Number.isFinite(airCurrent.us_aqi) ? airCurrent.us_aqi : null;
 
   return {
     location: {
@@ -45,6 +57,16 @@ export function normalizeWeatherApi(weatherData, location) {
     windSpeedKph: current.wind_speed_10m ?? 0,
     humidity: humidity ?? 50,
     cloudCover: cloudCover ?? 50,
-    isDay: Boolean(current.is_day)
+    isDay: Boolean(current.is_day),
+    airQuality: {
+      usAqi: aqi,
+      category: getAirQualityLabel(aqi),
+      pm25: Number.isFinite(airCurrent.pm2_5) ? airCurrent.pm2_5 : null,
+      pm10: Number.isFinite(airCurrent.pm10) ? airCurrent.pm10 : null,
+      ozone: Number.isFinite(airCurrent.ozone) ? airCurrent.ozone : null,
+      nitrogenDioxide: Number.isFinite(airCurrent.nitrogen_dioxide)
+        ? airCurrent.nitrogen_dioxide
+        : null
+    }
   };
 }
