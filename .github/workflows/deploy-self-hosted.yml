@@ -1,0 +1,36 @@
+name: Deploy Production (Self-Hosted)
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to server path and restart app
+        shell: bash
+        env:
+          DEPLOY_CONFIG_FILE: /etc/rothko-generator/deploy.env
+        run: |
+          chmod +x scripts/deploy.sh
+          scripts/deploy.sh

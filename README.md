@@ -1,131 +1,71 @@
-# Rothko Art Generator - Barebone Starter
+# Rothko Art Generator
 
-A minimal Next.js starter project to build a Rothko-style abstract art generator.
+Weather-driven abstract art generator built with Next.js (App Router)
 
-## Quick Start
+## Local Development
+
+1. Install dependencies: `npm install`
+2. Start dev server: `npm run dev`
+3. Open: `http://localhost:3000`
+
+## Scripts
+
+- `npm run dev`
+- `npm run lint`
+- `npm run build`
+- `npm run start`
+
+## Project Structure
+
+- `app/page.jsx`: main page and weather loading
+- `app/api/weather/route.js`: weather API endpoint
+- `app/lib/weather.js`: weather normalization helpers
+- `app/lib/time-of-day.js`: brightness helpers
+- `app/components/Canvas.jsx`: canvas render and weather readout
+
+## Data Flow
+
+1. UI requests weather from `/api/weather?q=location`
+2. API fetches geocoding, forecast, and air quality from Open-Meteo
+3. Data is normalized in `app/lib/weather.js`
+4. `Canvas` receives normalized weather and renders output
+
+## CI/CD
+
+- `.github/workflows/ci.yml`: runs lint and build on pull requests and pushes to `main`
+- `.github/workflows/deploy-self-hosted.yml`: auto-deploys on push to `main` using self-hosted runner
+- `scripts/deploy.sh`: syncs app files, installs production deps, builds, and restarts app
+
+### Self-Hosted Runner Requirements
+
+- Linux self-hosted runner
+- Node.js 20 and npm
+- `bash` and `rsync`
+
+### Deploy Server Config
+
+Create this file on the runner host:
+
+- `/etc/rothko-generator/deploy.env`
+
+Minimum values:
 
 ```bash
-npm install
-npm run dev
+DEPLOY_PATH=/var/www/rothko-generator
+RESTART_COMMAND='pm2 restart rothko-art-generator || pm2 start npm --name rothko-art-generator -- start'
 ```
 
-Then visit `http://localhost:3000`
+Optional ownership values:
 
-## File Structure
-
-```
-app/
-├── api/
-│   └── weather/
-│       └── route.js          (Weather API endpoint - implement this)
-├── components/
-│   ├── Canvas.jsx            (Main canvas - implement drawing logic)
-│   ├── SettingsPanel.jsx     (Settings sliders)
-│   ├── Footer.jsx            (Footer)
-│   └── LocationInput.jsx     (Location search)
-├── page.jsx                  (Main page)
-├── layout.jsx                (Layout)
-└── globals.css               (Global styles)
-
-package.json
-next.config.mjs
-tailwind.config.js
-postcss.config.js
-jsconfig.json
+```bash
+APP_USER=www-data
+APP_GROUP=www-data
 ```
 
-## What You Need to Build
+## Collaboration Workflow
 
-### 1. **Canvas Component** (Priority: HIGH)
+- Use feature branches
+- Open pull requests into `main`
+- Ensure CI passes before merging
 
-- [ ] Create HTML5 canvas element
-- [ ] Generate Rothko-style rectangles
-- [ ] Use weather data to influence colors
-- [ ] Add useEffect to draw on canvas
-
-**Hints:**
-
-- Use `canvas.getContext('2d')`
-- Map weather temp to color values
-- Create 3-5 rectangles with varying opacity
-
-### 2. **Settings Panel** (Priority: MEDIUM)
-
-- [ ] Add sliders for: complexity, grain, softness
-- [ ] Pass settings to Canvas component
-- [ ] Update canvas based on settings
-
-**Hints:**
-
-- Use `<input type="range">`
-- useState to manage slider values
-- Pass as props to Canvas
-
-### 3. **Weather API** (Priority: MEDIUM)
-
-- [ ] Replace mock data with real API
-- [ ] Use OpenWeatherMap API (free tier)
-- [ ] Extract temp, humidity, cloud cover
-
-**Hints:**
-
-- Sign up at openweathermap.org
-- Get your API key
-- Use fetch() to call their API
-
-### 4. **Data Mapping** (Priority: HIGH)
-
-- [ ] Map temperature → color hue/saturation
-- [ ] Map humidity → opacity/grain
-- [ ] Map cloud cover → complexity
-
-**Hints:**
-
-- HSL colors work great for mapping values
-- Use `hsl(hue, saturation%, lightness%)`
-- hue: 0-360, saturation: 0-100, lightness: 0-100
-
-### 5. **Polish** (Priority: LOW)
-
-- [ ] Better UI styling
-- [ ] Loading states
-- [ ] Error handling
-- [ ] Export/download image
-
-## Learning Path
-
-1. Start with Canvas.jsx - get something drawing first
-2. Implement basic rectangles (no weather integration yet)
-3. Connect weather data to colors
-4. Add Settings panel for user control
-5. Connect real weather API
-6. Polish the UI
-
-## Key Concepts to Learn
-
-- HTML5 Canvas API
-- React hooks (useState, useEffect)
-- Next.js API routes
-- Tailwind CSS
-- Color theory (RGB vs HSL)
-- API integration with fetch()
-
-## Useful Resources
-
-- [MD5 Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
-- [OpenWeatherMap API](https://openweathermap.org/api)
-- [React Hooks](https://react.dev/reference/react)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Rothko Info](https://en.wikipedia.org/wiki/Mark_Rothko)
-
-## Next Steps After Building
-
-- Add animation/transitions
-- Save/export compositions
-- Create a gallery of previous artworks
-- Add different art styles beyond Rothko
-- Deploy to Vercel
-
----
-
-**No node_modules included - run `npm install` first!**
+See `CONTRIBUTING.md` for branch and PR guidelines.
