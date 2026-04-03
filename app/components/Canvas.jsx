@@ -1,11 +1,27 @@
 import { useEffect, useRef } from "react";
-import { getBrightnessFromWeather } from "@/app/lib/time-of-day";
+import { mapWeathertoHSB } from "@/app/lib/colorEngine";
 
-function formatWeatherDisplay(weather, brightness) {
+function formatWeatherDisplay(weather, mappedWeather) {
   if (!weather) return "No weather data";
 
   try {
-    return `brightness_factor: ${brightness.toFixed(2)}\n\n${JSON.stringify(weather, null, 2)}`;
+    const factors = mappedWeather.factors || {};
+
+    return [
+      `hue: ${mappedWeather.hue.toFixed(2)}`,
+      `saturation: ${mappedWeather.saturation.toFixed(2)}`,
+      `brightness: ${mappedWeather.brightness.toFixed(2)}`,
+      `atmospheric_stability: ${mappedWeather.atmosphericStability.toFixed(2)}`,
+      `condition: ${mappedWeather.condition}`,
+      "factors:",
+      `  temperature_norm: ${(factors.temperatureNorm ?? 0).toFixed(3)}`,
+      `  humidity_norm: ${(factors.humidityNorm ?? 0).toFixed(3)}`,
+      `  cloud_norm: ${(factors.cloudNorm ?? 0).toFixed(3)}`,
+      `  wind_norm: ${(factors.windNorm ?? 0).toFixed(3)}`,
+      `  air_quality_norm: ${(factors.airQualityNorm ?? 0).toFixed(3)}`,
+      "",
+      JSON.stringify(weather, null, 2),
+    ].join("\n");
   } catch {
     return String(weather);
   }
@@ -13,8 +29,8 @@ function formatWeatherDisplay(weather, brightness) {
 
 export default function Canvas({ weather }) {
   const canvasRef = useRef(null);
-  const brightness = getBrightnessFromWeather(weather);
-  const displayText = formatWeatherDisplay(weather, brightness);
+  const mappedWeather = mapWeathertoHSB(weather);
+  const displayText = formatWeatherDisplay(weather, mappedWeather);
 
   useEffect(() => {
     const canvas = canvasRef.current;
