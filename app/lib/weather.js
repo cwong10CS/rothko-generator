@@ -3,7 +3,7 @@ const WEATHER_GROUPS = {
   cloudy: [1, 2, 3, 45, 48],
   rain: [51, 53, 55, 61, 63, 65, 80, 81, 82],
   snow: [71, 73, 75, 77, 85, 86],
-  storm: [95, 96, 99]
+  storm: [95, 96, 99],
 };
 
 function getCondition(weatherCode) {
@@ -42,8 +42,16 @@ export function normalizeWeatherApi(weatherData, airQualityData, location) {
   const current = weatherData?.current || {};
   const airCurrent = airQualityData?.current || {};
   const condition = getCondition(current.weather_code);
-  const humidity = getNearestHourlyValue(weatherData.hourly, current.time, "relative_humidity_2m");
-  const cloudCover = getNearestHourlyValue(weatherData.hourly, current.time, "cloud_cover");
+  const humidity = getNearestHourlyValue(
+    weatherData.hourly,
+    current.time,
+    "relative_humidity_2m",
+  );
+  const cloudCover = getNearestHourlyValue(
+    weatherData.hourly,
+    current.time,
+    "cloud_cover",
+  );
   const aqi = Number.isFinite(airCurrent.us_aqi) ? airCurrent.us_aqi : null;
 
   return {
@@ -51,14 +59,19 @@ export function normalizeWeatherApi(weatherData, airQualityData, location) {
       name: location.name,
       country: location.country,
       latitude: location.latitude,
-      longitude: location.longitude
+      longitude: location.longitude,
     },
     timestamp: current.time,
     timezone,
-    utcOffsetSeconds: Number.isFinite(utcOffsetSeconds) ? utcOffsetSeconds : null,
+    utcOffsetSeconds: Number.isFinite(utcOffsetSeconds)
+      ? utcOffsetSeconds
+      : null,
     condition,
     temperatureC: current.temperature_2m ?? 15,
     windSpeedKph: current.wind_speed_10m ?? 0,
+    windDirectionDeg: Number.isFinite(current.wind_direction_10m)
+      ? current.wind_direction_10m
+      : null,
     humidity: humidity ?? 50,
     cloudCover: cloudCover ?? 50,
     isDay: Boolean(current.is_day),
@@ -70,7 +83,7 @@ export function normalizeWeatherApi(weatherData, airQualityData, location) {
       ozone: Number.isFinite(airCurrent.ozone) ? airCurrent.ozone : null,
       nitrogenDioxide: Number.isFinite(airCurrent.nitrogen_dioxide)
         ? airCurrent.nitrogen_dioxide
-        : null
-    }
+        : null,
+    },
   };
 }
