@@ -1,38 +1,56 @@
 import { useEffect, useRef } from "react";
 import { mapWeathertoHSB } from "@/app/lib/colorEngine";
 import { generatePalette } from "@/app/lib/harmonyEngine";
+import { generateComposition } from "@/app/lib/compositionEngine";
 
 function formatWeatherDisplay(weather) {
   if (!weather) return "No weather data";
   try {
     const loc = weather.location || {};
+    const mapped = mapWeathertoHSB(weather);
     const palette = generatePalette(weather);
-    const format = ({ h, s, b }) =>
+    const comp = generateComposition(weather);
+    const layout = comp.layout;
+    const fmtColor = ({ h, s, b }) =>
       `h:${h.toFixed(0)} s:${s.toFixed(1)} b:${b.toFixed(3)}`;
+    const factors = mapped.factors || {};
 
     const lines = [
-      "----harmonyEngine palette----",
       `${loc.name || "unknown"}, ${loc.country || ""}`,
       `lat: ${loc.latitude?.toFixed(4) ?? "N/A"} long: ${loc.longitude?.toFixed(4) ?? "N/A"}`,
       "",
-      `background: ${format(palette.background)}`,
-      ...palette.blocks.map((blk, i) => `block[${i}]: ${format(blk)}`),
-      `glow: ${format(palette.glow)}`,
+      "----colorEngine HSB----",
+      `hue: ${mapped.hue.toFixed(2)}`,
+      `saturation: ${mapped.saturation.toFixed(2)}`,
+      `brightness: ${mapped.brightness.toFixed(2)}`,
+      `stability: ${mapped.atmosphericStability.toFixed(2)}`,
+      `condition: ${mapped.condition}`,
+      `factors: temp:${factors.temperatureNorm?.toFixed(3)} hum:${factors.humidityNorm?.toFixed(3)} cloud:${factors.cloudNorm?.toFixed(3)} wind:${factors.windNorm?.toFixed(3)} aqi:${factors.airQualityNorm?.toFixed(3)}`,
+      "",
+      "----harmonyEngine palette----",
+      `background: ${fmtColor(palette.background)}`,
+      ...palette.blocks.map((blk, i) => `block[${i}]: ${fmtColor(blk)}`),
+      `glow: ${fmtColor(palette.glow)}`,
       `stability: ${palette.meta.atmosphericStability.toFixed(3)}`,
-      `blocks count: ${palette.blocks.length}`,
+      "",
+      "----compositionEngine layout----",
+      `proportions: [${layout.proportions.map((p) => p.toFixed(3)).join(", ")}]`,
+      `gap: ${layout.gap.toFixed(4)}`,
+      `verticalDrift: [${layout.verticalDrift.map((d) => d.toFixed(4)).join(", ")}]`,
+      `softness: ${layout.softness.toFixed(4)}`,
+      `blockCount: ${layout.blockCount}`,
       "",
     ];
 
     return lines.join("\n");
   } catch (e) {
-    return `harmonyEngine error: ${e.message}\n`;
+    return `error: ${e.message}\n`;
   }
 }
 
 export default function Canvas({ weather }) {
   const canvasRef = useRef(null);
-  const mappedWeather = mapWeathertoHSB(weather);
-  const displayText = formatWeatherDisplay(weather, mappedWeather);
+  const displayText = formatWeatherDisplay(weather);
 
   useEffect(() => {
     const canvas = canvasRef.current;
