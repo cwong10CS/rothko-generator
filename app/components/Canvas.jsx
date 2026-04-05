@@ -1,29 +1,31 @@
 import { useEffect, useRef } from "react";
 import { mapWeathertoHSB } from "@/app/lib/colorEngine";
+import { generatePalette } from "@/app/lib/harmonyEngine";
 
-function formatWeatherDisplay(weather, mappedWeather) {
+function formatWeatherDisplay(weather) {
   if (!weather) return "No weather data";
-
   try {
-    const factors = mappedWeather.factors || {};
+    const loc = weather.location || {};
+    const palette = generatePalette(weather);
+    const format = ({ h, s, b }) =>
+      `h:${h.toFixed(0)} s:${s.toFixed(1)} b:${b.toFixed(3)}`;
 
-    return [
-      `hue: ${mappedWeather.hue.toFixed(2)}`,
-      `saturation: ${mappedWeather.saturation.toFixed(2)}`,
-      `brightness: ${mappedWeather.brightness.toFixed(2)}`,
-      `atmospheric_stability: ${mappedWeather.atmosphericStability.toFixed(2)}`,
-      `condition: ${mappedWeather.condition}`,
-      "factors:",
-      `  temperature_norm: ${(factors.temperatureNorm ?? 0).toFixed(3)}`,
-      `  humidity_norm: ${(factors.humidityNorm ?? 0).toFixed(3)}`,
-      `  cloud_norm: ${(factors.cloudNorm ?? 0).toFixed(3)}`,
-      `  wind_norm: ${(factors.windNorm ?? 0).toFixed(3)}`,
-      `  air_quality_norm: ${(factors.airQualityNorm ?? 0).toFixed(3)}`,
+    const lines = [
+      "----harmonyEngine palette----",
+      `${loc.name || "unknown"}, ${loc.country || ""}`,
+      `lat: ${loc.latitude?.toFixed(4) ?? "N/A"} long: ${loc.longitude?.toFixed(4) ?? "N/A"}`,
       "",
-      JSON.stringify(weather, null, 2),
-    ].join("\n");
-  } catch {
-    return String(weather);
+      `background: ${format(palette.background)}`,
+      ...palette.blocks.map((blk, i) => `block[${i}]: ${format(blk)}`),
+      `glow: ${format(palette.glow)}`,
+      `stability: ${palette.meta.atmosphericStability.toFixed(3)}`,
+      `blocks count: ${palette.blocks.length}`,
+      "",
+    ];
+
+    return lines.join("\n");
+  } catch (e) {
+    return `harmonyEngine error: ${e.message}\n`;
   }
 }
 
