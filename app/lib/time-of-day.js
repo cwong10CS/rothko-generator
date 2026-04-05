@@ -2,7 +2,7 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function getLocalHour(timestamp, utcOffsetSeconds) {
+export function getLocalHour(timestamp, utcOffsetSeconds) {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime()) || !Number.isFinite(utcOffsetSeconds)) {
     return null;

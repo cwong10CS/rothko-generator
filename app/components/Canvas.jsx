@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { mapWeathertoHSB } from "@/app/lib/colorEngine";
+import { getLocalHour, getBrightnessFromWeather } from "@/app/lib/time-of-day";
 import { generatePalette } from "@/app/lib/harmonyEngine";
 import { generateComposition } from "@/app/lib/compositionEngine";
+import { hsbToHex, hsbToRgba, buildBlockRects } from "@/app/lib/renderEngine";
 
 function formatWeatherDisplay(weather) {
   if (!weather) return "No weather data";
@@ -18,6 +20,15 @@ function formatWeatherDisplay(weather) {
     const lines = [
       `${loc.name || "unknown"}, ${loc.country || ""}`,
       `lat: ${loc.latitude?.toFixed(4) ?? "N/A"} long: ${loc.longitude?.toFixed(4) ?? "N/A"}`,
+      `isDay: ${weather.isDay}  timezone: ${weather.timezone ?? "N/A"}`,
+      `localHour: ${(() => {
+        const h = getLocalHour(weather.timestamp, weather.utcOffsetSeconds);
+        if (h === null) return "N/A";
+        const hh = String(Math.floor(h)).padStart(2, "0");
+        const mm = String(Math.floor((h % 1) * 60)).padStart(2, "0");
+        return `${hh}:${mm}`;
+      })()}  dayBrightness: ${getBrightnessFromWeather(weather).toFixed(3)}`,
+      `condition: ${weather.condition ?? "N/A"}  temp: ${weather.temperatureC ?? "N/A"}C  wind: ${weather.windSpeedKph ?? "N/A"}kph`,
       "",
       "----colorEngine HSB----",
       `hue: ${mapped.hue.toFixed(2)}`,
@@ -58,26 +69,35 @@ export default function Canvas({ weather }) {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const { width, height } = canvas;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Paint the Rothko composition
+    const comp = generateComposition(weather);
+    const bgColor = hsbToHex(comp.background);
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = "#1f2937";
-    ctx.font = "16px monospace";
-    ctx.textBaseline = "top";
+    const rects = buildBlockRects(comp, width, height);
 
-    const lines = displayText.split("\n");
-    let y = 20;
-    const lineHeight = 22;
-    const maxY = canvas.height - 20;
-
-    for (const line of lines) {
-      if (y > maxY) break;
-      ctx.fillText(line, 16, y);
-      y += lineHeight;
+    // Draw glow behind blocks
+    const glowColor = hsbToRgba(comp.glow, 0.15);
+    for (const block of rects) {
+      ctx.save();
+      ctx.filter = `blur(${(block.blur + 8).toFixed(1)}px)`;
+      ctx.fillStyle = glowColor;
+      ctx.fillRect(block.x - 4, block.y - 4, block.w + 8, block.h + 8);
+      ctx.restore();
     }
-  }, [weather, displayText]);
+
+    // Draw blocks
+    for (const block of rects) {
+      ctx.save();
+      ctx.filter = block.blur > 0 ? `blur(${block.blur.toFixed(1)}px)` : "none";
+      ctx.fillStyle = block.color;
+      ctx.fillRect(block.x, block.y, block.w, block.h);
+      ctx.restore();
+    }
+  }, [weather]);
 
   return (
     <div className="border-2 border-stone-300 rounded-lg p-4">
@@ -89,7 +109,9 @@ export default function Canvas({ weather }) {
         height={600}
         className="block w-full max-w-full h-auto border border-stone-200"
       />
-      <p className="text-sm text-stone-600 mt-4">{displayText}</p>
+      <p className="text-sm text-stone-600 mt-4 whitespace-pre-wrap font-mono">
+        {displayText}
+      </p>
     </div>
   );
 }

@@ -18,22 +18,22 @@ Hue spread widens with atmospheric instability */
 //Turbulent weather -> wider, contrasting palette
 //Might fine-tune in order to find the right artistic balance
 function hueSpread(stability) {
-  return 15 + (1 - stability) * 48;
+  return 15 + (1 - stability) * 30;
 }
 
-/*Background: base hue family with subtle stability-driven nudge.
+/*Background: complementary hue (+180° from base) with subtle spread nudge.
 Dimmer and less saturated than blocks, but brightness is still 
 primarily driven by mapBrightness (time of day, clouds, AQI). */
 function deriveBackground(hue, saturation, brightness, spread) {
   return {
     h: wrapHue(hue + spread * 0.1),
     s: clamp(saturation * 0.7, 10, 75),
-    b: clamp(brightness * 0.6, 0.05, 0.7),
+    b: clamp(brightness * 0.8, 0.12, 0.82),
   };
 }
 
-/*Top Block: complementary hue, full base brightness.
-Slight warm shift from complement cent via spread. */
+/*Top Block: base hue with spread-driven warm shift.
+Full base brightness. */
 function deriveTopBlock(hue, saturation, brightness, spread) {
   const comp = wrapHue(hue + 180);
   return {
@@ -43,7 +43,7 @@ function deriveTopBlock(hue, saturation, brightness, spread) {
   };
 }
 
-/*Middle block: complementary hue w/boosted saturaion and brightness.
+/*Middle block: base hue w/boosted saturation and brightness.
 Appears under turbulent conditions only (stability < 0.5). */
 function deriveMiddleBlock(hue, saturation, brightness, spread) {
   const comp = wrapHue(hue + 180);
@@ -54,7 +54,7 @@ function deriveMiddleBlock(hue, saturation, brightness, spread) {
   };
 }
 
-/*Bottom block: complementary hue shifted in the opposite direction.
+/*Bottom block: base hue shifted in the opposite direction.
 Slightly darker and less saturated than the top block. */
 function deriveBottomBlock(hue, saturation, brightness, spread) {
   const comp = wrapHue(hue + 180);
@@ -76,8 +76,8 @@ function deriveGlow(hue, saturation, brightness) {
 }
 
 /* Imports base HSB from colorEngine's mapWeathertoHSB, then derives:
-  - Background from base hue (warm ground)
-  - Blocks from complementary hue (+180°)
+  - Background from complementary hue (+180°)
+  - Blocks from base hue
   - Glow from base hue family
 */
 export function generatePalette(weather) {
