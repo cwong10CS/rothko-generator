@@ -5,11 +5,11 @@ to a base/anchor hue angle that is shifted by other factors. */
 
 const HUE_CONDITION = {
   clear: 48, //golden yellow
-  cloudy: 210, //steel blue
-  rain: 215, //slightly deeper blue
+  cloudy: 180, //Cyan
+  rain: 215, //slightly deeper sky blue
   snow: 205, //Lighter cyan-blues
   storm: 260, //violet-blue
-  mixed: 150, //Green-cyans
+  mixed: 90, //Green-cyans
 };
 
 //Caps number between min and max
@@ -65,9 +65,9 @@ export function mapHue(weather, stability) {
   const tempNorm = normalize(weather?.temperatureC, -15, 40); // Tuned for a broad moderate-climate outdoor range.
   const cloudNorm = normalize(weather?.cloudCover, 0, 100);
 
-  const thermalShift = (tempNorm - 0.5) * 80; // +/- 40 deg; higher temp -> warmer tones.
+  const thermalShift = (tempNorm - 0.5) * 100; // +/- 50 deg; higher temp -> warmer tones.
   const stabilityShift = (0.5 - stability) * 36; // +/- 18 deg; higher stability -> calmer tones.
-  const cloudShift = (0.5 - cloudNorm) * 22; // +/- 11 deg; clearer skies -> warmer tones.
+  const cloudShift = (0.5 - cloudNorm) * 12; // +/- 6 deg; clearer skies -> warmer tones.
 
   return wheelHue(baseHue + thermalShift + stabilityShift + cloudShift);
 }
@@ -84,7 +84,7 @@ export function mapSaturation(weather, stability) {
     36 + // midpoint/baseline
     24 * humidityNorm +
     18 * windNorm +
-    12 * (1 - cloudNorm) +
+    6 * (1 - cloudNorm) +
     10 * stability -
     12 * aqiNorm;
 
@@ -100,7 +100,7 @@ export function mapBrightness(weather, stability) {
   const aqiNorm = normalize(weather?.airQuality?.usAqi, 0, 200);
 
   const brightness =
-    0.68 * daytime + 0.2 * (1 - cloudNorm) + 0.1 * stability - 0.1 * aqiNorm;
+    0.72 * daytime + 0.1 * (1 - cloudNorm) + 0.14 * stability - 0.08 * aqiNorm;
 
   // 0.08-0.98 range to prevent fully black/white output.
   return clamp(brightness, 0.08, 0.98);
