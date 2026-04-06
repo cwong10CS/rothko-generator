@@ -2,7 +2,7 @@
 color relationships based on weather conditions and atmospheric stability */
 
 import { mapWeathertoHSB } from "./colorEngine";
-import { getBrightFromWeater } from "./time-of-day";
+import { getBrightnessFromWeather } from "./time-of-day";
 
 function wrapHue(value) {
   const h = value % 360;
@@ -107,7 +107,8 @@ export function generatePalette(weather) {
     spread,
     sunNorm,
   );
-  const topBlock = deriveTopBlock(hue, saturation, brightness, spread);
+  const daytime = getBrightnessFromWeather(weather);
+  const topBlock = deriveTopBlock(hue, saturation, brightness, spread, daytime);
   const bottomBlock = deriveBottomBlock(hue, saturation, brightness, spread);
 
   const blocks = [topBlock, bottomBlock];
