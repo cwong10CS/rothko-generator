@@ -46,10 +46,10 @@ function deriveBackground(hue, saturation, brightness, spread, sunNorm = 0.5) {
 /*Top Block: hue transitions from amber (day) to blue (night)
 based on daytime brightness factor. Full base brightness. */
 // daytime 1.0 -> amber, daytime 0.0 -> blue
+// Goes backwards: amber → red → violet → blue (avoids green spectrum)
 function deriveTopBlock(hue, saturation, brightness, spread, daytime) {
   const amberHue = 35;
-  const blueHue = 220;
-  const topHue = amberHue + (1 - daytime) * (blueHue - amberHue);
+  const topHue = amberHue - (1 - daytime) * 175;
   return {
     h: wrapHue(topHue),
     s: clamp(saturation, 18, 92),
