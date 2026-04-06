@@ -74,6 +74,9 @@ export function normalizeWeatherApi(weatherData, airQualityData, location) {
       : null,
     humidity: humidity ?? 50,
     cloudCover: cloudCover ?? 50,
+    sunshineDuration: Number.isFinite(current.sunshine_duration)
+      ? current.sunshine_duration
+      : null,
     isDay: Boolean(current.is_day),
     airQuality: {
       usAqi: aqi,

@@ -28,7 +28,7 @@ export async function GET(request) {
       );
     }
 
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&timezone=auto&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day&hourly=relative_humidity_2m,cloud_cover`;
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&timezone=auto&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day,sunshine_duration&hourly=relative_humidity_2m,cloud_cover`;
     const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${location.latitude}&longitude=${location.longitude}&current=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide`;
 
     const [weatherResponse, airQualityResponse] = await Promise.all([
