@@ -2,6 +2,7 @@
 color relationships based on weather conditions and atmospheric stability */
 
 import { mapWeathertoHSB } from "./colorEngine";
+import { getBrightFromWeater } from "./time-of-day";
 
 function wrapHue(value) {
   const h = value % 360;
@@ -21,6 +22,14 @@ function hueSpread(stability) {
   return 15 + (1 - stability) * 30;
 }
 
+/* Blend block base hue from analogous to complementary based on stability.
+High stability → tight analogous. Low stability → complementary contrast. */
+function blockBaseHue(hue, stability) {
+  const t = clamp((stability - 0.3) / 0.5, 0, 1);
+  const offset = 180 - t * 150; // 180 deg at low stability -> 30 deg  at high
+  return wrapHue(hue + offset);
+}
+
 /*Background: complementary hue (+180° from base) with subtle spread nudge.
 Dimmer and less saturated than blocks, but brightness is still 
 primarily driven by mapBrightness (time of day, clouds, AQI).
@@ -34,12 +43,15 @@ function deriveBackground(hue, saturation, brightness, spread, sunNorm = 0.5) {
   };
 }
 
-/*Top Block: base hue with spread-driven warm shift.
-Full base brightness. */
-function deriveTopBlock(hue, saturation, brightness, spread) {
-  const comp = wrapHue(hue + 180);
+/*Top Block: hue transitions from amber (day) to blue (night)
+based on daytime brightness factor. Full base brightness. */
+// daytime 1.0 -> amber, daytime 0.0 -> blue
+function deriveTopBlock(hue, saturation, brightness, spread, daytime) {
+  const amberHue = 35;
+  const blueHue = 220;
+  const topHue = amberHue + (1 - daytime) * (blueHue - amberHue);
   return {
-    h: wrapHue(comp + spread * 0.3),
+    h: wrapHue(topHue),
     s: clamp(saturation, 18, 92),
     b: clamp(brightness, 0.08, 0.98),
   };
