@@ -56,11 +56,13 @@ export function atmosphericStability(weather) {
   return clamp(1 - instability, 0, 1);
 }
 
-/* Hue (degrees): base(condition) + thermal shift
+/* Hue (degrees): base(condition & sunNorm) + thermal shift
 + stability shift + cloud shift */
 export function mapHue(weather, stability) {
   const condition = weather?.condition || "mixed";
-  const baseHue = HUE_CONDITION[condition] ?? HUE_CONDITION.mixed;
+  const sunNorm = normalize(weather?.sunshineDuration, 0, 900);
+  const conditionHue = HUE_CONDITION[condition] ?? HUE_CONDITION.mixed;
+  const baseHue = conditionHue + (HUE_CONDITION.clear - conditionHue) * sunNorm;
 
   const tempNorm = normalize(weather?.temperatureC, -15, 40); // Tuned for a broad moderate-climate outdoor range.
   const cloudNorm = normalize(weather?.cloudCover, 0, 100);
@@ -79,6 +81,7 @@ export function mapSaturation(weather, stability) {
   const windNorm = normalize(weather?.windSpeedKph, 0, 60);
   const cloudNorm = normalize(weather?.cloudCover, 0, 100);
   const aqiNorm = normalize(weather?.airQuality?.usAqi, 0, 200);
+  const sunNorm = normalize(weather?.sunshineDuration, 0, 900);
 
   const saturation =
     36 + // midpoint/baseline
@@ -86,7 +89,8 @@ export function mapSaturation(weather, stability) {
     18 * windNorm +
     6 * (1 - cloudNorm) +
     10 * stability -
-    12 * aqiNorm;
+    12 * aqiNorm +
+    8 * sunNorm; // more sunshine -> richer color
 
   // 18-92 range to prevent gray washout or oversaturation.
   return clamp(saturation, 18, 92);
@@ -98,9 +102,14 @@ export function mapBrightness(weather, stability) {
   const daytime = getBrightnessFromWeather(weather);
   const cloudNorm = normalize(weather?.cloudCover, 0, 100);
   const aqiNorm = normalize(weather?.airQuality?.usAqi, 0, 200);
+  const sunNorm = normalize(weather?.sunshineDuration, 0, 900);
 
   const brightness =
-    0.72 * daytime + 0.1 * (1 - cloudNorm) + 0.14 * stability - 0.08 * aqiNorm;
+    0.72 * daytime +
+    0.1 * (1 - cloudNorm) +
+    0.14 * stability -
+    0.08 * aqiNorm +
+    0.12 * sunNorm;
 
   // 0.08-0.98 range to prevent fully black/white output.
   return clamp(brightness, 0.08, 0.98);
@@ -126,6 +135,7 @@ export function mapWeathertoHSB(weather) {
       cloudNorm: normalize(weather?.cloudCover, 0, 100),
       windNorm: normalize(weather?.windSpeedKph, 0, 60),
       airQualityNorm: normalize(weather?.airQuality?.usAqi, 0, 200),
+      sunNorm: normalize(weather?.sunshineDuration, 0, 900),
     },
   };
 }

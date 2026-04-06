@@ -29,6 +29,7 @@ function formatWeatherDisplay(weather) {
         return `${hh}:${mm}`;
       })()}  dayBrightness: ${getBrightnessFromWeather(weather).toFixed(3)}`,
       `condition: ${weather.condition ?? "N/A"}  temp: ${weather.temperatureC ?? "N/A"}C  wind: ${weather.windSpeedKph ?? "N/A"}kph`,
+      `sunshineDuration: ${weather.sunshineDuration != null ? `${weather.sunshineDuration.toFixed(0)}s` : "N/A"}`,
       "",
       "----colorEngine HSB----",
       `hue: ${mapped.hue.toFixed(2)}`,

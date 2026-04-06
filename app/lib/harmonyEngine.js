@@ -23,12 +23,14 @@ function hueSpread(stability) {
 
 /*Background: complementary hue (+180° from base) with subtle spread nudge.
 Dimmer and less saturated than blocks, but brightness is still 
-primarily driven by mapBrightness (time of day, clouds, AQI). */
-function deriveBackground(hue, saturation, brightness, spread) {
+primarily driven by mapBrightness (time of day, clouds, AQI).
+sunNorm lifts brightness and shifts hue warmer in sunny conditions. */
+function deriveBackground(hue, saturation, brightness, spread, sunNorm = 0.5) {
+  const warmBias = sunNorm * 15; // up to +15° warm shift at full sunshine
   return {
-    h: wrapHue(hue + spread * 0.1),
-    s: clamp(saturation * 0.7, 10, 75),
-    b: clamp(brightness * 0.8, 0.12, 0.82),
+    h: wrapHue(hue + spread * 0.1 - warmBias),
+    s: clamp(saturation * 0.75, 18, 78), // raised floor/multiplier to reduce dullness
+    b: clamp(brightness * (0.85 + 0.1 * sunNorm), 0.12, 0.92), // sunshine lifts brightness up to *0.95
   };
 }
 
@@ -85,7 +87,14 @@ export function generatePalette(weather) {
   const { hue, saturation, brightness, atmosphericStability: stability } = base;
   const spread = hueSpread(stability);
 
-  const background = deriveBackground(hue, saturation, brightness, spread);
+  const sunNorm = base.factors?.sunNorm ?? 0.5;
+  const background = deriveBackground(
+    hue,
+    saturation,
+    brightness,
+    spread,
+    sunNorm,
+  );
   const topBlock = deriveTopBlock(hue, saturation, brightness, spread);
   const bottomBlock = deriveBottomBlock(hue, saturation, brightness, spread);
 
