@@ -37,9 +37,3 @@ jobs:
         run: |
           chmod +x scripts/deploy.sh
           scripts/deploy.sh
-        shell: bash
-        env:
-          DEPLOY_CONFIG_FILE: /etc/rothko-generator/deploy.env
-        run: |
-          chmod +x scripts/deploy.sh
-          scripts/deploy.sh
