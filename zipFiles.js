@@ -38,7 +38,6 @@ archive.glob("**/*", {
   dot: true, // Include files that start with a dot
   ignore: [
     "node_modules/**", // Exclude node_modules
-    ".next/**", // Exclude build artifacts
     "rothko-generator-deploy.zip", // Exclude the zip file itself
     ".git/**", // Exclude git files
     "*.log", // Exclude log files

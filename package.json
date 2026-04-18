@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "package": "node zipFiles.js"
+    "package": "node zipFiles.js",
+    "postinstall": "next build"
   },
   "dependencies": {
     "next": "14.2.5",
