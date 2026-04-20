@@ -101,22 +101,24 @@ export default function HomePage() {
         {loading && <p>Loading...</p>}
         {weather && <Canvas weather={weather} />}
 
-        <LocationInput
-          onChange={loadWeather}
-          defaultValue={location}
-          backgroundColor={getBackgroundColor(weather)}
-          location={`${locationData?.city || location}${locationData?.region ? ", " + locationData.region : locationData?.country ? ", " + locationData.country : ""}`}
-        />
-      </main>
+        <div className="flex gap-4 items-center">
+          <LocationInput
+            onChange={loadWeather}
+            defaultValue={location}
+            backgroundColor={getBackgroundColor(weather)}
+            location={`${locationData?.city || location}${locationData?.region ? ", " + locationData.region : locationData?.country ? ", " + locationData.country : ""}`}
+          />
 
-      <button
-        onClick={handleDownload}
-        className={`fixed bottom-6 right-4 px-4 py-2 bg-stone-600 text-white rounded hover:bg-stone-700 transition-opacity whitespace-nowrap ${
-          showButton ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        Download
-      </button>
+          <button
+            onClick={handleDownload}
+            className={`px-4 py-2 bg-stone-600 text-white rounded hover:bg-stone-700 transition-opacity whitespace-nowrap ${
+              showButton ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            Download
+          </button>
+        </div>
+      </main>
     </div>
   );
 }
