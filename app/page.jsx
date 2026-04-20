@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Canvas from "./components/Canvas";
+import LocationInput from "./components/LocationInput";
 
 const DEFAULT_LOCATION = "Florence";
 
@@ -42,17 +43,7 @@ export default function HomePage() {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
       <h1 className="text-4xl font-bold">Rothko Art Generator</h1>
 
-      <input
-        type="text"
-        placeholder="Enter location..."
-        defaultValue={location}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            loadWeather(e.target.value);
-          }
-        }}
-        className="border p-2 rounded"
-      />
+      <LocationInput onChange={loadWeather} defaultValue={location} />
 
       {loading && <p>Loading...</p>}
       {weather && <Canvas weather={weather} />}
