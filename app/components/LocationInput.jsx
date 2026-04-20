@@ -50,31 +50,21 @@ export default function LocationInput({
       return;
     }
 
-    // Format weather info with labels
-    const getWeatherInfo = () => {
-      if (!weather) return null;
-      const temp =
-        weather.temperature !== undefined
-          ? Math.round(weather.temperature)
-          : "--";
-      const condition = weather.condition || "--";
-      const aqi =
-        weather.air_quality?.aqi !== undefined
-          ? Math.round(weather.air_quality.aqi)
-          : "--";
-      return { temp, condition, aqi };
-    };
-
     // Start cycling through title, location, and weather
     let cycleStep = 0;
     const cycles = ["title", "location", "weather"];
+    let isMounted = true;
 
     const cycleTitles = () => {
+      if (!isMounted) return;
+
       // Fade out
       setTitleOpacity(0);
 
       // Change display after fade starts
       cycleTimer.current = setTimeout(() => {
+        if (!isMounted) return;
+
         cycleStep = (cycleStep + 1) % cycles.length;
         const mode = cycles[cycleStep];
         setDisplayMode(mode);
@@ -96,17 +86,9 @@ export default function LocationInput({
 
     cycleTitles();
 
-    // Reset after 20 seconds of inactivity
-    inactivityTimer.current = setTimeout(() => {
-      clearTimeout(cycleTimer.current);
-      setDisplayTitle("Rothko Art Generator");
-      setDisplayMode("title");
-      setTitleOpacity(1);
-      cycleStep = 0;
-    }, 20000);
-
     return () => {
-      clearInterval(cycleTimer.current);
+      isMounted = false;
+      clearTimeout(cycleTimer.current);
       clearTimeout(inactivityTimer.current);
     };
   }, [isHovered, input, location, weather]);
@@ -174,16 +156,17 @@ export default function LocationInput({
             )}
             {displayMode === "weather" && weather && (
               <div
-                className="text-2xl font-semibold text-stone-600 transition-opacity"
+                className="text-2xl font-semibold text-stone-600 transition-opacity whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{ opacity: titleOpacity, transitionDuration: "250ms" }}
               >
                 {(() => {
-                  // Format current time in location
+                  // Format current time in location using timezone from weather
                   const now = new Date();
                   const timeString = now.toLocaleTimeString("en-US", {
                     hour: "2-digit",
                     minute: "2-digit",
                     hour12: true,
+                    timeZone: weather.timezone || undefined,
                   });
 
                   const temp =
@@ -191,12 +174,9 @@ export default function LocationInput({
                       ? Math.round(weather.temperatureC)
                       : "--";
                   const condition = weather.condition || "--";
-                  const aqi =
-                    weather.airQuality?.usAqi !== undefined
-                      ? Math.round(weather.airQuality.usAqi)
-                      : "--";
+                  const aqiLabel = weather.airQuality?.category || "--";
 
-                  return `${timeString} • ${temp}°C • ${condition} • AQI: ${aqi}`;
+                  return `${timeString} • ${temp}°C • ${condition} • AQI: ${aqiLabel}`;
                 })()}
               </div>
             )}
