@@ -62,11 +62,16 @@ function formatWeatherDisplay(weather) {
 
 export default function Canvas({ weather }) {
   const canvasRef = useRef(null);
-  const displayText = formatWeatherDisplay(weather);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    //set canvas size to match container
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -105,20 +110,30 @@ export default function Canvas({ weather }) {
     if (!canvas) return;
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
-    link.download = `rothko-$new Date().toISOString().split('T')[0]}.png`;
+    link.download = `rothko-${new Date().toISOString().split("T")[0]}.png`;
     link.click();
   };
 
   return (
-    <div className="border-2 border-stone-300 rounded-lg p-4">
-      <h2 className="text-2xl font-semibold mb-4">Canvas</h2>
-      <canvas
-        ref={canvasRef}
-        id="rothko-canvas"
-        width={800}
-        height={600}
-        className="block w-full max-w-full h-auto border border-stone-200"
-      />
+    <div
+      style={{
+        width: "100%",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        ref={containerRef}
+        className="border-2 border-stone-300 rounded-sm"
+        style={{ flex: 1, minHeight: 0, overflow: "hidden" }}
+      >
+        <canvas
+          ref={canvasRef}
+          id="rothko-canvas"
+          style={{ display: "block", width: "100%", height: "100%" }}
+        />
+      </div>
 
       <div className="flex gap-3 justify-center mt-6">
         <button
