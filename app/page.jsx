@@ -107,6 +107,7 @@ export default function HomePage() {
             defaultValue={location}
             backgroundColor={getBackgroundColor(weather)}
             location={`${locationData?.city || location}${locationData?.region ? ", " + locationData.region : locationData?.country ? ", " + locationData.country : ""}`}
+            weather={weather}
           />
 
           <button

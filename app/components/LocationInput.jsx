@@ -5,12 +5,14 @@ export default function LocationInput({
   defaultValue,
   backgroundColor,
   location,
+  weather,
 }) {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [displayTitle, setDisplayTitle] = useState("Rothko Art Generator");
+  const [displayMode, setDisplayMode] = useState("title"); // 'title', 'location', 'weather'
   const [titleOpacity, setTitleOpacity] = useState(1);
   const debounceTimer = useRef(null);
   const placeholderTimer = useRef(null);
@@ -38,32 +40,58 @@ export default function LocationInput({
     return () => clearTimeout(placeholderTimer.current);
   }, [input]);
 
-  // Cycle title between "Rothko Art Generator" and location
+  // Cycle title between "Rothko Art Generator", location, and weather info separately
   useEffect(() => {
     if (isHovered || input.length > 0) {
       clearTimeout(cycleTimer.current);
       clearTimeout(inactivityTimer.current);
       setTitleOpacity(1);
+      setDisplayMode("title");
       return;
     }
 
-    // Start cycling title with fade effect
-    let isShowingLocation = false;
+    // Format weather info with labels
+    const getWeatherInfo = () => {
+      if (!weather) return null;
+      const temp =
+        weather.temperature !== undefined
+          ? Math.round(weather.temperature)
+          : "--";
+      const condition = weather.condition || "--";
+      const aqi =
+        weather.air_quality?.aqi !== undefined
+          ? Math.round(weather.air_quality.aqi)
+          : "--";
+      return { temp, condition, aqi };
+    };
+
+    // Start cycling through title, location, and weather
+    let cycleStep = 0;
+    const cycles = ["title", "location", "weather"];
 
     const cycleTitles = () => {
       // Fade out
       setTitleOpacity(0);
 
-      // Change title after fade starts
+      // Change display after fade starts
       cycleTimer.current = setTimeout(() => {
-        isShowingLocation = !isShowingLocation;
-        setDisplayTitle(isShowingLocation ? location : "Rothko Art Generator");
+        cycleStep = (cycleStep + 1) % cycles.length;
+        const mode = cycles[cycleStep];
+        setDisplayMode(mode);
+
+        if (mode === "title") {
+          setDisplayTitle("Rothko Art Generator");
+        } else if (mode === "location") {
+          setDisplayTitle(location);
+        } else if (mode === "weather") {
+          setDisplayTitle("--"); // Placeholder, actual content in JSX
+        }
         // Fade in
         setTitleOpacity(1);
 
-        // Schedule next cycle (5 seconds per title)
+        // Schedule next cycle (5 seconds per display)
         cycleTimer.current = setTimeout(cycleTitles, 5000);
-      }, 500);
+      }, 250);
     };
 
     cycleTitles();
@@ -72,15 +100,16 @@ export default function LocationInput({
     inactivityTimer.current = setTimeout(() => {
       clearTimeout(cycleTimer.current);
       setDisplayTitle("Rothko Art Generator");
+      setDisplayMode("title");
       setTitleOpacity(1);
-      isShowingLocation = false;
+      cycleStep = 0;
     }, 20000);
 
     return () => {
       clearInterval(cycleTimer.current);
       clearTimeout(inactivityTimer.current);
     };
-  }, [isHovered, input, location]);
+  }, [isHovered, input, location, weather]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -121,17 +150,57 @@ export default function LocationInput({
     >
       {showPlaceholder && (
         <div
-          className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 transition-opacity ${
+          className={`absolute inset-0 flex items-center pointer-events-none z-20 transition-opacity ${
             isHovered ? "opacity-0" : "opacity-100"
           }`}
           style={{ transitionDuration: "1500ms" }}
         >
-          <span
-            className="text-4xl font-bold text-stone-600 transition-opacity"
-            style={{ opacity: titleOpacity, transitionDuration: "500ms" }}
-          >
-            {displayTitle}
-          </span>
+          <div className="text-left pl-2">
+            {displayMode === "title" && (
+              <span
+                className="text-4xl font-bold text-stone-600 transition-opacity block"
+                style={{ opacity: titleOpacity, transitionDuration: "250ms" }}
+              >
+                {displayTitle}
+              </span>
+            )}
+            {displayMode === "location" && (
+              <span
+                className="text-4xl font-bold text-stone-600 transition-opacity block"
+                style={{ opacity: titleOpacity, transitionDuration: "250ms" }}
+              >
+                {location}
+              </span>
+            )}
+            {displayMode === "weather" && weather && (
+              <div
+                className="text-2xl font-semibold text-stone-600 transition-opacity"
+                style={{ opacity: titleOpacity, transitionDuration: "250ms" }}
+              >
+                {(() => {
+                  // Format current time in location
+                  const now = new Date();
+                  const timeString = now.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  });
+
+                  const temp =
+                    weather.temperatureC !== undefined
+                      ? Math.round(weather.temperatureC)
+                      : "--";
+                  const condition = weather.condition || "--";
+                  const aqi =
+                    weather.airQuality?.usAqi !== undefined
+                      ? Math.round(weather.airQuality.usAqi)
+                      : "--";
+
+                  return `${timeString} • ${temp}°C • ${condition} • AQI: ${aqi}`;
+                })()}
+              </div>
+            )}
+          </div>
         </div>
       )}
       <input
