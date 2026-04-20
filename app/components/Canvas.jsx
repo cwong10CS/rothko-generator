@@ -100,6 +100,15 @@ export default function Canvas({ weather }) {
     }
   }, [weather]);
 
+  const downloadImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `rothko-$new Date().toISOString().split('T')[0]}.png`;
+    link.click();
+  };
+
   return (
     <div className="border-2 border-stone-300 rounded-lg p-4">
       <h2 className="text-2xl font-semibold mb-4">Canvas</h2>
@@ -110,6 +119,15 @@ export default function Canvas({ weather }) {
         height={600}
         className="block w-full max-w-full h-auto border border-stone-200"
       />
+
+      <div className="flex gap-3 justify-center mt-6">
+        <button
+          onClick={downloadImage}
+          className="px-4 py-2 bg-stone-700 text-white rounded hover:bg-stone-800 transition-colors text-sm font-medium"
+        >
+          Download PNG
+        </button>
+      </div>
       <p className="text-sm text-stone-600 mt-4 whitespace-pre-wrap font-mono">
         {displayText}
       </p>
