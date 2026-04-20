@@ -1,12 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 
-export default function LocationInput({ onChange, defaultValue }) {
+export default function LocationInput({
+  onChange,
+  defaultValue,
+  backgroundColor,
+  location,
+}) {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
-  const [isFocused, setIsFocused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [displayTitle, setDisplayTitle] = useState("Rothko Art Generator");
+  const [titleOpacity, setTitleOpacity] = useState(1);
   const debounceTimer = useRef(null);
   const placeholderTimer = useRef(null);
+  const cycleTimer = useRef(null);
+  const inactivityTimer = useRef(null);
 
   // Show placeholder only when input is empty
   useEffect(() => {
@@ -17,7 +26,7 @@ export default function LocationInput({ onChange, defaultValue }) {
     }
   }, [input]);
 
-  // Show placeholder again after 10 seconds of inactivity
+  // Show placeholder again after 20 seconds of inactivity
   useEffect(() => {
     clearTimeout(placeholderTimer.current);
     if (input.length === 0) {
@@ -28,6 +37,50 @@ export default function LocationInput({ onChange, defaultValue }) {
 
     return () => clearTimeout(placeholderTimer.current);
   }, [input]);
+
+  // Cycle title between "Rothko Art Generator" and location
+  useEffect(() => {
+    if (isHovered || input.length > 0) {
+      clearTimeout(cycleTimer.current);
+      clearTimeout(inactivityTimer.current);
+      setTitleOpacity(1);
+      return;
+    }
+
+    // Start cycling title with fade effect
+    let isShowingLocation = false;
+
+    const cycleTitles = () => {
+      // Fade out
+      setTitleOpacity(0);
+
+      // Change title after fade starts
+      cycleTimer.current = setTimeout(() => {
+        isShowingLocation = !isShowingLocation;
+        setDisplayTitle(isShowingLocation ? location : "Rothko Art Generator");
+        // Fade in
+        setTitleOpacity(1);
+
+        // Schedule next cycle (5 seconds per title)
+        cycleTimer.current = setTimeout(cycleTitles, 5000);
+      }, 500);
+    };
+
+    cycleTitles();
+
+    // Reset after 20 seconds of inactivity
+    inactivityTimer.current = setTimeout(() => {
+      clearTimeout(cycleTimer.current);
+      setDisplayTitle("Rothko Art Generator");
+      setTitleOpacity(1);
+      isShowingLocation = false;
+    }, 20000);
+
+    return () => {
+      clearInterval(cycleTimer.current);
+      clearTimeout(inactivityTimer.current);
+    };
+  }, [isHovered, input, location]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -49,35 +102,48 @@ export default function LocationInput({ onChange, defaultValue }) {
   };
 
   const selectLocation = (location) => {
-    setInput(location.name);
     setSuggestions([]);
-    onChange(location.name);
+    // Pass location name for API, and full location data for display
+    onChange(location.name, {
+      city: location.name,
+      region: location.admin1,
+      country: location.country,
+    });
+    setInput(""); // Clear input to show cycling title
   };
 
   return (
-    <div className="relative w-full">
+    <div
+      className="relative w-full"
+      style={{ backgroundColor }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {showPlaceholder && (
         <div
-          className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 transition-opacity duration-700 ${
-            isFocused ? "opacity-0" : "opacity-100"
+          className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 transition-opacity ${
+            isHovered ? "opacity-0" : "opacity-100"
           }`}
+          style={{ transitionDuration: "1500ms" }}
         >
-          <span className="text-4xl font-bold text-stone-600">
-            Rothko Art Generator
+          <span
+            className="text-4xl font-bold text-stone-600 transition-opacity"
+            style={{ opacity: titleOpacity, transitionDuration: "500ms" }}
+          >
+            {displayTitle}
           </span>
         </div>
       )}
       <input
         type="text"
+        style={{ backgroundColor }}
         placeholder={
-          showPlaceholder && !isFocused
+          showPlaceholder && !isHovered
             ? ""
             : "Enter location by country, state, city or zip code..."
         }
         value={input}
         onChange={handleInputChange}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             onChange(input);
