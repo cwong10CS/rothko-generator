@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Canvas from "./components/Canvas";
 import LocationInput from "./components/LocationInput";
 import { getBrightnessFromWeather } from "./lib/time-of-day";
+import { detectUserLocation } from "./lib/geolocation";
 
 const DEFAULT_LOCATION = "Florence";
 
@@ -28,7 +29,15 @@ export default function HomePage() {
   const hideButtonTimer = useRef(null);
 
   useEffect(() => {
-    loadWeather(DEFAULT_LOCATION);
+    const initLocation = async () => {
+      const detectedLoc = await detectUserLocation();
+      if (detectedLoc) {
+        loadWeather(detectedLoc.name, detectedLoc);
+      } else {
+        loadWeather(DEFAULT_LOCATION);
+      }
+    };
+    initLocation();
   }, []);
 
   useEffect(() => {
