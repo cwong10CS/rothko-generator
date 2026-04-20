@@ -125,7 +125,7 @@ export default function Canvas({ weather }) {
     >
       <div
         ref={containerRef}
-        className="border-2 border-stone-300 rounded-sm"
+        className="border-2 border-stone-300 rounded-md"
         style={{ flex: 1, minHeight: 0, overflow: "hidden" }}
       >
         <canvas
