@@ -29,15 +29,19 @@ export default function HomePage() {
   const hideButtonTimer = useRef(null);
 
   useEffect(() => {
-    const initLocation = async () => {
+    // Load default location first
+    loadWeather(DEFAULT_LOCATION);
+  }, []);
+
+  useEffect(() => {
+    // Then detect user location asynchronously
+    const detectLocation = async () => {
       const detectedLoc = await detectUserLocation();
       if (detectedLoc) {
         loadWeather(detectedLoc.name, detectedLoc);
-      } else {
-        loadWeather(DEFAULT_LOCATION);
       }
     };
-    initLocation();
+    detectLocation();
   }, []);
 
   useEffect(() => {
