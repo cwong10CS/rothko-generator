@@ -128,9 +128,6 @@ export default function Canvas({ weather }) {
           Download PNG
         </button>
       </div>
-      <p className="text-sm text-stone-600 mt-4 whitespace-pre-wrap font-mono">
-        {displayText}
-      </p>
     </div>
   );
 }
