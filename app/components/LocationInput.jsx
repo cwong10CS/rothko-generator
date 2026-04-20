@@ -144,10 +144,41 @@ export default function LocationInput({
         }
         value={input}
         onChange={handleInputChange}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            onChange(input);
+        onKeyDown={async (e) => {
+          if (e.key === "Enter" && input.trim()) {
+            // Fetch location data from API to get proper formatting
+            try {
+              const res = await fetch(
+                `/api/locations?q=${encodeURIComponent(input)}`,
+              );
+              const data = await res.json();
+              const firstResult = data.results?.[0];
+
+              if (firstResult) {
+                // Use API data for proper capitalization and formatting
+                onChange(firstResult.name, {
+                  city: firstResult.name,
+                  region: firstResult.admin1,
+                  country: firstResult.country,
+                });
+              } else {
+                // Fallback if no API results
+                onChange(input, {
+                  city: input,
+                  region: null,
+                  country: null,
+                });
+              }
+            } catch (error) {
+              console.error("Error fetching location:", error);
+              onChange(input, {
+                city: input,
+                region: null,
+                country: null,
+              });
+            }
             setSuggestions([]);
+            setInput(""); // Clear input to show cycling title
           }
         }}
         className="border border-stone-300 focus:border-stone-200 focus:ring-1 focus:ring-stone-300 p-2 rounded w-full relative z-10 bg-white"

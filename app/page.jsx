@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Canvas from "./components/Canvas";
 import LocationInput from "./components/LocationInput";
 import { getBrightnessFromWeather } from "./lib/time-of-day";
@@ -24,9 +24,28 @@ export default function HomePage() {
   });
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showButton, setShowButton] = useState(false);
+  const hideButtonTimer = useRef(null);
 
   useEffect(() => {
     loadWeather(DEFAULT_LOCATION);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowButton(true);
+      clearTimeout(hideButtonTimer.current);
+      hideButtonTimer.current = setTimeout(() => {
+        setShowButton(false);
+      }, 2000); // Hide after 2 seconds of inactivity
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      clearTimeout(hideButtonTimer.current);
+    };
   }, []);
 
   async function loadWeather(nextLocation, locData) {
@@ -57,6 +76,18 @@ export default function HomePage() {
     }
   }
 
+  const handleDownload = () => {
+    const canvas = document.getElementById("rothko-canvas");
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `rothko-${new Date().toISOString().split("T")[0]}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div
       style={{
@@ -64,17 +95,28 @@ export default function HomePage() {
         opacity: weather ? 1 : 0,
         transition: "background-color 1000ms, opacity 2000ms",
       }}
+      className="relative min-h-screen"
     >
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+        {loading && <p>Loading...</p>}
+        {weather && <Canvas weather={weather} />}
+
         <LocationInput
           onChange={loadWeather}
           defaultValue={location}
           backgroundColor={getBackgroundColor(weather)}
           location={`${locationData?.city || location}${locationData?.region ? ", " + locationData.region : locationData?.country ? ", " + locationData.country : ""}`}
         />
-        {loading && <p>Loading...</p>}
-        {weather && <Canvas weather={weather} />}
       </main>
+
+      <button
+        onClick={handleDownload}
+        className={`fixed bottom-6 right-4 px-4 py-2 bg-stone-600 text-white rounded hover:bg-stone-700 transition-opacity whitespace-nowrap ${
+          showButton ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        Download
+      </button>
     </div>
   );
 }

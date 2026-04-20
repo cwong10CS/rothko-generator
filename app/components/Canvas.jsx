@@ -134,15 +134,6 @@ export default function Canvas({ weather }) {
           style={{ display: "block", width: "100%", height: "100%" }}
         />
       </div>
-
-      <div className="flex gap-3 justify-center mt-6">
-        <button
-          onClick={downloadImage}
-          className="px-4 py-2 bg-stone-700 text-white rounded hover:bg-stone-800 transition-colors text-sm font-medium"
-        >
-          Download PNG
-        </button>
-      </div>
     </div>
   );
 }
