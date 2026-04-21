@@ -230,7 +230,7 @@ export default function LocationInput({
             setInput(""); // Clear input to show cycling title
           }
         }}
-        className="border border-stone-300 focus:border-stone-200 focus:ring-1 focus:ring-stone-300 p-2 rounded w-full relative z-10 bg-white"
+        className="outline-none p-2 rounded w-full relative z-10 bg-white"
       />
       {suggestions.length > 0 && (
         <ul className="absolute top-full left-0 right-0 bg-white border border-stone-300 mt-1 rounded shadow-lg z-10 max-h-48 overflow-y-auto">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Canvas from "./components/Canvas";
+import FaqOverlay from "./components/FaqOverlay";
 import LocationInput from "./components/LocationInput";
 import { getBrightnessFromWeather } from "./lib/time-of-day";
 import { detectUserLocation } from "./lib/geolocation";
@@ -26,7 +27,15 @@ export default function HomePage() {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showButton, setShowButton] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
   const hideButtonTimer = useRef(null);
+
+  const locationRef = useRef(DEFAULT_LOCATION);
+  const locationDataRef = useRef({
+    city: "Florence",
+    region: "Tuscany",
+    country: "Italy",
+  });
 
   useEffect(() => {
     // Load default location first
@@ -42,6 +51,17 @@ export default function HomePage() {
       }
     };
     detectLocation();
+  }, []);
+
+  // Auto-refresh weather every 30 minutes using latest location
+  useEffect(() => {
+    const interval = setInterval(
+      () => {
+        loadWeather(locationRef.current, locationDataRef.current);
+      },
+      30 * 60 * 1000,
+    );
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -78,8 +98,10 @@ export default function HomePage() {
 
       setWeather(data);
       setLocation(nextLocation);
+      locationRef.current = nextLocation;
       if (locData) {
         setLocationData(locData);
+        locationDataRef.current = locData;
       }
     } catch (error) {
       console.error("Error loading weather:", error);
@@ -88,6 +110,25 @@ export default function HomePage() {
       setLoading(false);
     }
   }
+
+  const handleShare = async () => {
+    const canvas = document.getElementById("rothko-canvas");
+    if (!canvas) return;
+
+    canvas.toBlob(async (blob) => {
+      const file = new File(
+        [blob],
+        `rothko-${new Date().toISOString().split("T")[0]}.png`,
+        { type: "image/png" },
+      );
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Rothko Generator" });
+      } else {
+        navigator.clipboard.writeText(window.location.href).catch(() => {});
+        alert("Link copied to clipboard!");
+      }
+    });
+  };
 
   const handleDownload = () => {
     const canvas = document.getElementById("rothko-canvas");
@@ -110,11 +151,12 @@ export default function HomePage() {
       }}
       className="relative min-h-screen"
     >
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+      <FaqOverlay open={faqOpen} onClose={() => setFaqOpen(false)} />
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-12 pb-6">
         {loading && <p>Loading...</p>}
         {weather && <Canvas weather={weather} />}
 
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-stretch">
           <LocationInput
             onChange={loadWeather}
             defaultValue={location}
@@ -123,14 +165,50 @@ export default function HomePage() {
             weather={weather}
           />
 
-          <button
-            onClick={handleDownload}
-            className={`px-4 py-2 bg-stone-600 text-white rounded hover:bg-stone-700 transition-opacity whitespace-nowrap ${
-              showButton ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-          >
-            Download
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFaqOpen((o) => !o)}
+              style={{
+                backgroundImage: "url('/orange-and-yellow(1).jpg')",
+                backgroundSize: "100% 100%",
+                backgroundPosition: "center",
+              }}
+              className={`flex items-center justify-center px-2 py-2 rounded text-sm font-bold uppercase tracking-wide text-transparent hover:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] hover:brightness-110 duration-700 transition-[filter,color,opacity] ${
+                showButton ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
+            >
+              FAQ
+            </button>
+
+            <div className="flex flex-col gap-2 w-20">
+              <button
+                onClick={handleDownload}
+                style={{
+                  backgroundImage: "url('/Rust and Blue.jpg')",
+                  backgroundSize: "100% 100%",
+                  backgroundPosition: "center",
+                }}
+                className={`flex items-center justify-center px-2 py-2 rounded text-sm font-bold uppercase tracking-wide text-transparent hover:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] hover:brightness-110 duration-700 transition-[filter,color,opacity] ${
+                  showButton ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              >
+                Download
+              </button>
+              <button
+                onClick={undefined}
+                style={{
+                  backgroundImage: "url('/Violet,_Green_and_Red.jpg')",
+                  backgroundSize: "100% 100%",
+                  backgroundPosition: "center",
+                }}
+                className={`flex items-center justify-center px-2 py-2 rounded text-sm font-bold uppercase tracking-wide text-transparent hover:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] hover:brightness-110 duration-700 transition-[filter,color,opacity] ${
+                  showButton ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              >
+                Share
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </div>
